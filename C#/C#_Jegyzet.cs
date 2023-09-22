@@ -14,6 +14,9 @@ namespace HelloWorld
 
 #region 3. óra - 
 
+/*
+- aasd
+*/
 
 
 #endregion
