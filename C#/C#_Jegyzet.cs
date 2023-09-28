@@ -2,7 +2,8 @@
 
 namespace HelloWorld
 {
-    class Hello {         
+    class Hello
+    {
         static void Main(string[] args)
         {
             System.Console.WriteLine("Hello World!");
@@ -14,9 +15,16 @@ namespace HelloWorld
 
 #region 3. óra - 
 
-/*
-- aasd
-*/
+namespace HelloWorld
+{
+    class Hello
+    {
+        static void Main(string[] args)
+        {
+            System.Console.WriteLine("Hello World!");
+        }
+    }
+}
 
 
 #endregion
