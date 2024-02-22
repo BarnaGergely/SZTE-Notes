@@ -23,24 +23,17 @@
     - Érték típus csak értéket ad át, nem referenciát
     - referencia típus is alapértelmezetten csak értéket ad át, ref kulcsszó kell hogy referencia adódjon át
 
-```c#
-public class PontOsztaly {
-    public int x, y;
-};
-
-public struct Pont {
-    public int X {get; set;}
-    public int Y {get; set;}
-
-    // TODO: contructor
-};
-
-Pont pont; // nem kell new
-pont.x = 0;    // ha nem adunk meg valamit, alapértelemezett lesz
-
-PontOsztaly p = new PontOsztaly(5, 6);
-PontOsztaly p = new (5, 6);
-```
-
-
-
+- TryParse
+    - hiba kezelés, nem exception, nem kell try cache
+- immutable
+    - fix memória területen van az adat a heap-ben
+    - Változtatásnál új helyet foglalunk le neki, oda másoljuk az adatot
+    - TODO: ezt nem értem
+- láthatósági módosítók
+ - internal: szerelvényen belül látható csak
+- Property-k
+    - get; set;
+    - init; - konstruktor helyett
+    - változó legyen privát, csak a property legyen kipublikálva
+    - _x - privát elé szoktunk rakni _
+- 
