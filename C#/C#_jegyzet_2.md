@@ -180,3 +180,191 @@ finally {
     // mindenképp lefut
 }
 ```
+
+# 4. óra Márc 7 - SOLID elvek
+
+## SOLID
+
+Design patterns
+
+Tapasztalatok mentén megfogalmazódott irányelvek
+
+Singleton - anti pattern
+
+- Single responsibility: 
+    - Egy osztálynak a feladatban ha kötő szavat kell használnod, akkor nem teljesíti
+    - Egy osztálynak egy funkciója legyen
+    - előnyök
+        - side effectek minimalizálása
+    - sokszor nehéz szétválasztani a funkciókat
+    - 
+- Open/closed:
+    - Egy osztálynak nyitottnak a bővítésre, de zárt a módosításra
+    - Inkább öröklődéssel bővítsünk, ne az ősosztályt babráljuk
+    - gyakorlatban nehéz kivitelezni
+    - C#-ben virtual vagy abstract kulcsszót kell használni az ősosztályban is
+        - sealed - öröklés megakadályozása
+- Liskov Substitution
+    - ha az ősosztályod definiál egy metódust, ami vissza tér valamilyen értékkel akkor a visszatérési érték típusát ne definiáljuk felül
+    - A leszármazott ugyan olyan dologgal vagy nagyon hasonlóval térjen vissza mint az ős
+    - mellékhatás is ide tartozik
+    - EZ interface-ekre is vonatkozik
+- Interface segregation:
+    - interface-eket bontsd minél kisebb részekre
+    - A komplex interface-eket bontsd kisebb részekre
+    - Ne legyen a client interface, ami mindent is csinál egyszerre.
+    MInt a single responsibility
+- Dependency inversion: 
+    - Ha egy osztály példányosít magának másik osztályok, nem jó, mert nem tesztelhető és opne/closed is sérülni fog
+    - Megoldás: A interface-t használni a két osztály között
+        - Így lehet dummy B-t létre hozni A-hoz
+        - Ez a repository pattern
+
+## más hasznos elvek
+
+### Keep it simple
+
+- USA hadserege találta ki a 40-esévekbe
+- Legyen minden a lehető legegyszerűbb, a lehető legkevesebb komponenssel, mert úgy romlik el a legkisebb eséllyel
+
+### YAGNO
+
+- You Aint Gonna Need It
+- A lényegre koncentrálj
+- Kérdezd meg: Biztos szükséges ez a feature? - Vissza kell kérdezni a megrendelőtől
+- A munka 50%-át kérdésekkel megspórolhatod
+- F-16 története, mig-29. - de miért a kérdés mindig. Mindent kérdezzünk meg.
+    - Minél több kérdés annál jobb
+
+## Software Architecture
+
+- a fejlesztéssel közben meghozott döntések sorozata
+- Vannak döntések, amiket nagyon sokba kerül megváltoztatni (pl. Angular vs React)
+
+### Klasszikus Layered architecture
+
+- Alul database, felül view
+- Application és domain hozza a pénzt, ez tárolja az igazi tudást, funciókat
+- nem valami flexibilis, de egyszerű implementálni
+
+# Clean architecture
+
+- könyebb platformok között átvinni
+
+
+```c#
+namespace Shell {
+    internal class Program {
+        static void Main(string[] args) {
+            Console.WriteLine("Hello");
+        }
+    }
+
+    // rétegtől független bárhol implementálható funkciók
+namespace Shell.Infrastructure {
+    
+
+    internal interface IShellCommand {
+        string Name {Get; }
+        void Execute(IHost host, string[] args);
+    }
+
+    /// A futtató alkalmazás interface-e, olyan funkciókat definiál, amihez egy IshellCommand hozzá férhet
+    internal interface IHost {
+        // azt az alkalmazást írja le ami futtatja a command okat
+        sting ReadLine();
+        void WriteLine(string message);
+        void Exit(); // ez már sérti az interface segregation-t, de példa programban jó ez így mert így nem kell tonnányi interface
+    }
+
+}
+
+namespace Shell.Userinterface {
+    internal class Ui {
+private readonly ComnadProv _comandProvider;
+private read only host;
+
+        public Ui(CommandProvider commandProvider, IHost host) {
+            _host = 
+            _Command prov
+        }
+
+        public void Run(){
+            while(true) {
+                string input = host.ReadLine();
+                string[] splittedInput = input.Split(' ');
+                IShellCommand? commandToExecute = FindCommandName(splittedinput[0]);
+                if (commandToExecute != null) { // null check nagyon fontos. 90%-ban emiatt crash-el az app
+                    // TODO: folytatni 
+                    commandToExecute.Execute();
+                }
+
+            }
+        }
+
+        private IShellCommand? FindCommandName(string commandName) {
+            // iterációs változó egyes számban, amit iterálunk (tömb) többes számban
+            // ne fancy-zz az nagollal, mert valaki úgysem fogja érteni, csak egyszerűen
+            // egy dolgot ha valahogy elneveztél, ahhoz konzisztensen ragaszkodj
+            // a nevezéktant nem változtatjuk
+            foreach(var command in _commandProvider.Commands) {
+                if (command.Name.Equals(commandName, String.Comparison.CurrentCultureIgnoreCase)) { 
+                    // ne kommentálj to lover-re, ha nem akarod figyelembe venni a kis és nagy betűt mivel megeszi a memóriát
+                    /* currentCulture v InariantCulture
+                        - Németül a ss = B
+                        - Ha invariant a culture, akkor megkülönbözteti a kettőt
+                        - Ordinal UTF szabvány szerinti összehasonlítás
+                    */
+
+                    return command;
+                }
+            }
+            return null;
+        }
+    }
+
+    // command ok szolgáltatása az app nak
+    internal class CommandProvider {
+        public IShellCommand[] Commands { 
+            get;
+            /* probléma: ahányszor hozzá nyúluk a List-hez újra fogja példányosítani a tömböt. 
+            get {
+                return new IshellCommand[] {
+                    new Exitcommand(),
+                }
+            }
+            */
+        }
+
+        // megoldás
+        public CommandProvider {
+            Commands= new IshellCommand[] {
+                    new Exitcommand(),
+                }
+        }
+    }
+}
+
+namespace Shell.Application {
+    internal call ExitCommand : IShellCommand { // neve hasonlítson az implementált interface-ekre
+
+        /*
+        public string Name { // működik de van rövidebb is
+            get{ return "exit";}
+        }
+        */
+
+        //rövidebben
+        public string Name => "exit";
+
+        public void Execute(IHost host, string[] args) {
+            host.Exit();
+        }
+    }
+}
+}
+
+// C#-ben minden mappa egy új namespace
+    
+
+```
