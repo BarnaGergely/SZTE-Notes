@@ -368,3 +368,133 @@ namespace Shell.Application {
     
 
 ```
+
+# Tesztelés
+
+```c#
+namespace Matek {
+    internal class Matek{
+        public static void Main {
+
+        }
+    }
+
+    internal class FibonacciCalculator {
+        public int[] CalculateFibo(int n) {
+            if(n <= 0) {
+                thow new ArgumentException("rossz szam");
+            }
+
+            int[] fib = new int[n];
+
+            if(n==1) {
+                fib[0] = 0;
+                return fib
+            }
+            if(n==2) {
+                fib[0] = 0;
+                fib[1] = 1;
+                return fib;
+            }
+            
+            for(int i = 2; i < n-1; i++) {
+                fib[i] = fib[i-1] + fib[i-2];
+            }
+            return fib;
+        }
+    }
+}
+
+//NUnit keretrendszerrel tesztelünk
+[assembly: Internal VisibleTo("TestMatek")]
+namespace TestMatek {
+    [TextFixture]
+    public class UT_FibonacciCalculator {
+        FibonacciCalculator _sut; // System under test
+
+        [Setup]
+        public void Setup(){
+
+        }
+
+        [Test]
+        public void EnsureThat_Fibo_Throws_If_N_One() {
+            // Arrange
+            _sut = new FibonacciCalculator();
+
+            // Act
+            var actual = _sut.CaclulateFib(-1);
+
+            // Assert
+            Assert.AreEqual(0, actual);
+        }
+
+        [Test]
+        public void EnsureThat_Fibo_Throws_If_N_One() {
+            // Arrange
+            _sut = new FibonacciCalculator();
+
+            // Act
+            var actual = _sut.CaclulateFib(1);
+
+            // Assert
+            Assert.AreEqual(0, actual[0]);
+        }      
+
+
+        [Test]
+        public void EnsureThat_Fibo_Throws_If_N_Two() {
+            // Arrange
+            _sut = new FibonacciCalculator();
+
+            // Act
+            var actual = _sut.CaclulateFib(2);
+
+            // Assert
+            Assert.AreEqual(1, actual[1]);
+        }    
+    }
+}
+
+namespace Matek {
+    public interface IPaymentGateway {
+        bool ProcessPayment(double amount);
+    }
+}
+
+namespace Matek {
+    public class PaymentProcessor {
+
+    }
+}
+
+namespace TestMAtek {
+    public IT_PaymentProcessor {
+        PaymentProcessor _sut;
+        Mock<IpaymentGateway> _mockGateway;
+
+        // mock objektumok
+        /*
+        - fake
+        ...
+        - mock
+        */
+
+        [Setup]
+        public void Setup {
+            _mosckGateway = new Mosck<IPaymentGateway>();
+            _mockGateway.Setup(x => x.ProcessPayment(It.IsAny<double>)).Returns(true);
+            _sut = new PaymentProcessor(_mockGateway);
+        }
+
+        [Test]
+        public void Test_ProcessPayment()
+        {
+            double amount = 100;
+             var actual = 
+        }
+
+    }
+}
+
+```
