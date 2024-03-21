@@ -256,7 +256,8 @@ Singleton - anti pattern
 namespace Shell {
     internal class Program {
         static void Main(string[] args) {
-            Console.WriteLine("Hello");
+            var ui = new Ui(new ReflectionCommandProvider(), new Host());
+            ui.Run();
         }
     }
 
@@ -275,14 +276,25 @@ namespace Shell.Infrastructure {
         sting ReadLine();
         void WriteLine(string message);
         void Exit(); // ez már sérti az interface segregation-t, de példa programban jó ez így mert így nem kell tonnányi interface
+        void Write(string message);
+
+        // ha nem jó az implementáció, mivel valamit elbaztunk és még nem javtottuk, dununk interface-be is írni kódot
+        // Ezek mindig virtuális metódusok, ha implementáljuk, felül íródik, mint egy default érték
+
+    }
+
+    // Attribute szó mindig utána legyen téve
+    internal class DoNotLoadAttribute: Attribute {
+        // Attribute-ot reflection-el lehet feldologzni
+
     }
 
 }
 
 namespace Shell.Userinterface {
     internal class Ui {
-private readonly ComnadProv _comandProvider;
-private read only host;
+        private readonly ComnadProv _comandProvider;
+        private read only host;
 
         public Ui(CommandProvider commandProvider, IHost host) {
             _host = 
@@ -291,12 +303,22 @@ private read only host;
 
         public void Run(){
             while(true) {
+                _host.Write("> ");
                 string input = host.ReadLine();
                 string[] splittedInput = input.Split(' ');
                 IShellCommand? commandToExecute = FindCommandName(splittedinput[0]);
                 if (commandToExecute != null) { // null check nagyon fontos. 90%-ban emiatt crash-el az app
-                    // TODO: folytatni 
-                    commandToExecute.Execute();
+                    // Következő óra
+                    try {
+                        commandToExecute.Execute(_host, splittedInput); // ez lustaság, feleslegesen másolgatjuk az első attribútumot, ami a program neve-t C-ben
+                    } catch (Exception ex) {
+                        // el lehet kapni minden exception, mert bárkitől bárhonnan jöhet a betöltött kód
+                        _host.WiteLine("Hiba történt");
+                        Debug.WriteLine(ex); // nem az igazi, mert rengeteg log keletkezik az output-ra
+                        Trace.WriteLine(ex, "commandexception"); // ez jobb, de a legjobb file-ba logolás lenne
+                        // fájlba exception típusát lehet, konkrét helyet, osztályt nem
+                         
+                    }
                 }
 
             }
@@ -323,8 +345,46 @@ private read only host;
         }
     }
 
+    internal class RefflectionCommandLoader : ICommandProvider {
+        public IShellCommand[] Commands {get; }
+
+        public RefflectionCommandLoader() {
+            Type t = typeof(RefflectionCommandLoader); // kikérjük egy osztály típusát a CLR-től
+                // ezzel akár privát metódusok is elérhetők. Nem jó ötlet erre használni
+
+            var commands = new List<IShellCommand>;
+            
+
+            //Assembly az a bináris, amiben a t tipus található
+            foreach (var type in t.Assembly.getTypes()) {
+                if(!type.IsAbstract && !type.Interface && type.IsAssignableTo(typeof(IShellCommand))){ // To = From - Egyenlség bal vagy jobb oldalára kerüljön az adat
+
+// nem macro, mint a C-ben, de hasonló. Szimbólumokat lehet figyelni
+#if RELEASE
+                    if (type.GetCustomAttribute<DoNotLoadAttribute>() != null) {
+                        continue;
+                    }
+#endif
+                    // CLR-t megkérjük hogy példányosítson. A new mögött is ez van.
+                    object? instance = Activator.CreateInstance(type); // C++-ot is futtatni a CLR, ahol lehet null a new, ezért itt is lehet null
+
+                    // Sose static cast oljunk (float)!!!!! helyette
+
+                    if (instance is IshellCommand command) {
+                        commands.Add(command);
+                    }
+
+
+                }
+            }
+            commands = commands.ToArray;
+        }
+    }
+
+
+    [Obsolete] // azt jelenti ezt az osztályt ki fogjuk vezetni
     // command ok szolgáltatása az app nak
-    internal class CommandProvider {
+    internal class CommandProvider : ICommandProvider { // 2. órán kiszedtük interface-be, hogy dimanikusan lehessen betölteni a Command okat
         public IShellCommand[] Commands { 
             get;
             /* probléma: ahányszor hozzá nyúluk a List-hez újra fogja példányosítani a tömböt. 
@@ -336,17 +396,38 @@ private read only host;
             */
         }
 
-        // megoldás
+        /* megoldás, amely az open-closed ot nem teljesíti
         public CommandProvider {
             Commands= new IshellCommand[] {
                     new Exitcommand(),
                 }
         }
+        */
+
+    }
+
+    internal class Host : IHost {
+        public void Exit() {
+            Enviroment.Exit(0); // azért 0, mivel unix-on csak akor fut tovább az & operátor, ha hamis, ha valami igaz, megáll
+        }
+
+        public string ReadLine() {
+            return Console.ReadLine()?? throw new InvalidOperationEception();
+
+        }
+
+        public void WriteLine(string message) {
+            return Console.WriteLine(message);
+        }
+
+        public void Write(string message) {
+            return Console.Write(message);
+        }
     }
 }
 
 namespace Shell.Application {
-    internal call ExitCommand : IShellCommand { // neve hasonlítson az implementált interface-ekre
+    internal class ExitCommand : IShellCommand { // neve hasonlítson az implementált interface-ekre
 
         /*
         public string Name { // működik de van rövidebb is
@@ -359,6 +440,15 @@ namespace Shell.Application {
 
         public void Execute(IHost host, string[] args) {
             host.Exit();
+        }
+    }
+    [DoNotLoad]
+    internal class HelloCommand : IShellCommand {
+
+        public string Name => "hello";
+
+        public void Execute(IHost host, string[] args) {
+            host.WriteLine("hello");
         }
     }
 }
@@ -496,5 +586,20 @@ namespace TestMAtek {
 
     }
 }
-
 ```
+
+# Márc 21 - Reflection
+
+- GIT fordítás
+    - nem minden vason működik a Just In Time fordítás
+    - Lassú, de csak betöltésnél számít
+
+- Annak előnyei hogy nem a vason, hanem keretrendeszeren fut a program
+    - Van egy API, amivel lehet beszélgeni a környezet a programmal
+    - Le lehet fordítani a binárist
+
+- Reflection
+    - Menet közben
+
+- Composition over inheritance
+    - Öröklési lánc ha 5 elemnél mélyebb, valami el van cseszve
