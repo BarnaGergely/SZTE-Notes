@@ -603,3 +603,49 @@ namespace TestMAtek {
 
 - Composition over inheritance
     - Öröklési lánc ha 5 elemnél mélyebb, valami el van cseszve
+
+# Ápr 04 - Immutable + serializáció
+
+Immutable: objektum referenciájának nem változhat az érték
+
+- strig esetén találkozunk vele - alapértelmezetten ilyen
+- string módosításnál másolat képződik
+- több száló környezetben is biztosan jó érték fog tárolódni, ezért alkalmazzák
+  - Stack-ből lehet több (minden process-nek van)
+  - Heapből csak egy van
+- Deadlock a máik probléma amit egít elkerülni ez a megvalósítás
+
+Immutable példa:
+
+- Olyan osztály, ami csak get-elhető é constuktorral beállítható, nem set elhett
+
+
+a fanc kulcsszók csak compiler genrálást végeznek basic C#-ra
+
+sharplab.io - megmutatja mit fordított a C#-ból a fordító
+
+serialization
+
+adat betöltés és kiírás
+
+- xml
+  - lehet validálni
+  - sok helyet foglal
+- JSON
+  - js hibáit hozza magával
+  - jóval gyorsabb .net-ben mert sokat optimalizálták, használják
+- YAML
+  - szóközökkel formázott, ez gond tud lenni
+- CSV
+  - nem szabad egyedi implementációt írni hozzá
+
+Az adat rekord osztálynak amit szerializálunk public-nak kell lennie!
+
+XSS inection - input mezőbe beadott támadás (js, sql, unicode)
+
+json beállításokbn propert nameing policy camel case ajánlott, hogy C#-os elnevezésű legyen
+
+
+```c#
+
+```
