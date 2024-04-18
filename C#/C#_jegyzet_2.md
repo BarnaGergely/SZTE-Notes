@@ -649,3 +649,80 @@ json beállításokbn propert nameing policy camel case ajánlott, hogy C#-os el
 ```c#
 
 ```
+
+
+# LINQ (link!!!!)
+
+SQL injection
+
+beugratós kérdés: csinálj saját vermet
+
+List több helyet fglal le mint amennyit megadsz, hogy bővíteni lehesssen. Tömb pont ugyanannyit.
+    - lista végét szinte ingyen van bővíteni (beszúrni), elejére nagyn költséges beszúrni, mert mindent át kell másolni
+Span - cache-elt List
+
+Interjún menj végig szóban hogy mit fogsz csinálni.
+
+yield
+
+Másik iterjú
+
+fizz buzz teszt
+
+ha valami osztható 3-al, ha %5 : buzz, ha mindkettő fizzbuzz, ellenkező, maga a szám
+
+LINQ
+
+var-t LINQ-hoz találták ki.
+
+# Async
+
+Realtime OS: x időn belül megtörténik amit meg csinálasz. Winfos, Linux nem ilyen. Autóban van ilyen
+
+Multitask OS - win, Linux
+
+## Process:
+Önállóan futó program
+
+## Thread:
+
+Egy önálló egység egy processen belül
+Minden process legalább egy thread-et tartalmaz
+Hardver terén mást jelent
+
+
+Multitask OS thread-ek között váltogat
+
+Dead lock heap-en keletkezhet
+
+Race condition - két szál szeretné ugyan azt haszálni, ezért a sorrendiség nem garantálható
+
+## Task
+
+Thread-ek problémájára ad megoldást, magasabb szintű abstrakció
+
+Van mögötte egy heurisztikus ütemező, eldönti hogy megéri e külön szálon futtatni.
+- Ez elég jól van optimalizálva és tesztelve
+- Ez egy np teljes probléma, nagyon nehezen megoldható
+
+Thread létrehozás időigényes, mert OS kezeli, Task-nak nincs ilyen idő igénye Windows-on
+
+Task -ba ne rakj olyat ami az alkalmazás egész futási ideje alatt fut, csak rövid idő alatt lezárulókat
+
+Kooperatív konkurencia
+
+Ha task-ban exception dobódik és sima void függvény hívás volt, nem tudod elkapni az exceptin-t, csak úgy bezáródik a program
+
+Void típüsnélküli típus C-ben
+
+Ha nem várod meg hogy véget érjen a végre hajtása egy Task-nak, az exception is elveszik ami benne dobódik
+
+AZ Io műveletek sokkal lasabbak mint a proci és blokkoló műveletek, fáj olvasás során a szál nem tud mást csinálni
+
+A Task eredeti célja hogy az IO műveleteket ki tudjuk szervezni
+
+`async` - lehet void, de ha void másképp működik exception szempontjából
+- Fire and forget: elindítom és leszarom. A dobott exception-t sem tudom elkapni
+- async void-ot nem csinálunk!!!!!! Helyette Legyen `async Task` a viszatérési érték
+    - Ez átviszi a kivételt is
+
