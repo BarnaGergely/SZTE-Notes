@@ -726,3 +726,12 @@ A Task eredeti célja hogy az IO műveleteket ki tudjuk szervezni
 - async void-ot nem csinálunk!!!!!! Helyette Legyen `async Task` a viszatérési érték
     - Ez átviszi a kivételt is
 
+# Párhuzamosítás
+
+```
+Parakell.For(0, 10_000, i, i => {
+ ints.Add(i);
+});
+
+
+```
