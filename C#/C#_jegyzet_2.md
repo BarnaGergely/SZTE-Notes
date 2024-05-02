@@ -728,10 +728,153 @@ A Task eredeti célja hogy az IO műveleteket ki tudjuk szervezni
 
 # Párhuzamosítás
 
-```
+```c#
 Parakell.For(0, 10_000, i, i => {
  ints.Add(i);
 });
 
+Debug.Assert(intsCount == 10_000); // programozott breakpoint
 
 ```
+race ondition miatt csak kb. 400 került bele
+
+régebben ez crash-et okozott, ma már nem. Nagyon nehéz diagnosztizálni, mert nem adódik mindig exception
+
+Megoldás: lock statement használata
+
+```c#
+Parakell.For(0, 10_000, i, i => {
+    lock (ints)
+    {
+        ints.Add(i);
+    }
+});
+
+Debug.Assert(intsCount == 10_000); // programozott breakpoint
+```
+
+ez megoldás, de így már nem gyors mert egyszerre csak egy férhet hozzá.
+
+SOSE lock-olj this-re!!!! - nem biztos hogy azon a szálon fut a kód, amint ahol létrejött, így létrejöhet deadlock
+
+helyette:
+```c#
+object obj = new();
+Parakell.For(0, 10_000, i, i => {
+    lock (obj)
+    {
+        ints.Add(i);
+    }
+});
+```
+
+Ha egy fő zároló objektumot akarsz csak használni (csak egy zároló objektum lehessen), akkor már ezt inkább az OS-re hagyd.
+
+Semafor és mutex erre egy code-os megoldás, ha az OS nem játszik.
+
+```c#
+Mutex m = new Mutex(false, "egyediNev"); // a neve egyedi, így akár futhat pontosan csak egy az alkamazásodból.
+```
+A név legyen teljesen egyedi!!! - erre egyedi azonosító kell: UUID 2^128 lehetőség van, ez több mint az unniverzum molekuláinak száma, így tekinthetjük mindig egyedinek.
+
+GuID a UUID V4-es verzióját implementálja
+
+```c#
+using Mutex m = new Mutex(false, "7773D...........");
+
+Parakell.For(0, 10_000, i, i => {
+    m.WaitOne();
+    ints.Add(i);
+    m.ReleaseMutex()
+});
+```
+
+ez már globálosan is működni fog, de még mindig lassú
+
+## Concurent bag
+
+több szál is tudja egyszerre írni
+
+Háttérben megkeresi hogy hány cpu és van és annyi belső listát hoz létre - interjú kérdés lehet Írásnál csak egyet lockol egyszerre egy szál - olvasásánál összefűzi őket. Nem garantál sorrendiséget.
+
+```c#
+ConcurentBag<int> ints = new();
+Parakell.For(0, 10_000, i, i => {
+ ints.Add(i);
+});
+
+string s = string.join(',', ints)
+Console.Writeline(s)
+```
+
+## párhuzamos foreach
+
+partícionálás van a háttérben. Kis enumerable-ökre bonti a listát. Memória felhasználást ez megduplázza, lehet hogy meghatványozza, nem értettem.
+
+```C#
+string[] tmp = ["egy", "harom", "ketto"];
+
+Paralell.Foreach(tmp, elem => {
+    Console.WriteLine(elem); // a konzol párhuzamosra van implementálva .NET hat óta, ezért működik manuális lock nélkül is
+});
+```
+
+## csak egy létezhet belőle - Mutex
+
+```c#
+private const string MutexName "UUID.......";
+
+static void Main()
+{
+    if (Mutex.TryOpenExisting(MitexName, out var mutex))
+    {
+        // Akkor már létezik egy példány
+        Console.WriteLine("Már fut");
+        Enviroment.Exit(-1);
+    }
+
+    using var newMutex = new Mutex(false, MutexNAme);
+
+    Console.WriteLine("Hy");
+    Console.ReadKey();
+}
+```
+
+## Semafor
+
+Egy számlálót is hozzávesz a szemaforhoz, így pl. kliensek számának inkremetálása.
+
+## Sporadikus hibák
+
+vagy előjönnek vagy nem. Ez a szálkezelés hibájának a jele.
+
+```c#
+static void Main()
+{
+    long counter = 0;
+    Paralell.For(0, 1000, i => {
+        counter++; // nem atomi művelet, hanem valójában több.
+    });
+    Console.WiteLine(counter);
+}
+```
+
+Nem atomi műveletek: &, |, +=, *=
+
+```c#
+static void Main()
+{
+    long counter = 0;
+    Paralell.For(0, 1000, i => {
+        Interlocked.Increment(ref counter); // atomi műveletek megvalósítása van benne.
+        // ez lasabb, de működik több szálóságnál is
+        // lock-al kiváltható, de ez kényelmesebb, érthetőbb
+    });
+    Console.WiteLine(counter);
+}
+```
+
+## Dátum, idő
+
+Sose fejleszd le magad, mindenre van kész inplementáció!
+
